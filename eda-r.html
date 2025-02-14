@@ -116,7 +116,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lubridate)</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># 读取 loans.csv 数据</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Read loans.csv data</span></span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>loans <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"data/loans.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Rows: 682 Columns: 25
@@ -129,28 +129,28 @@ date  (1): date
 ℹ Use `spec()` to retrieve the full column specification for this data.
 ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 筛选出表示贷款期限与状态的列（例如："24_A", "12_B"等）</span></span>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Select columns representing loan terms and statuses (e.g., "24_A", "12_B", etc.)</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>loan_term_cols <span class="ot">&lt;-</span> loans <span class="sc">%&gt;%</span> </span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">matches</span>(<span class="st">"^[0-9]+_[ABCD]$"</span>)) <span class="sc">%&gt;%</span> </span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>()</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co"># 将贷款期限字段 pivot 成长格式</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Pivot loan term columns into a long format</span></span>
 <span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>loans_long <span class="ot">&lt;-</span> loans <span class="sc">%&gt;%</span> </span>
 <span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
 <span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="fu">all_of</span>(loan_term_cols),</span>
 <span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"term_status"</span>,</span>
 <span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"flag"</span></span>
 <span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 仅保留标记为“X”的记录，假设 “X” 表示该贷款期限及状态适用，其余用 "-" 表示无效</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Keep only records marked with "X", while "-" represents an invalid entry</span></span>
 <span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(flag <span class="sc">!=</span> <span class="st">"-"</span>) </span>
 <span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="co"># 从 term_status 中提取贷款期限和状态代码</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract loan term and status code from term_status</span></span>
 <span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>loans_long <span class="ot">&lt;-</span> loans_long <span class="sc">%&gt;%</span></span>
 <span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
 <span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">loan_term =</span> <span class="fu">as.integer</span>(<span class="fu">str_extract</span>(term_status, <span class="st">"^[0-9]+"</span>)),</span>
 <span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">loan_detail =</span> <span class="fu">str_extract</span>(term_status, <span class="st">"[A-Z]"</span>)</span>
 <span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 为了每个贷款记录只保留第一条有效信息，按贷款记录分组</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Retain only the first valid entry for each loan record, grouping by loan attributes</span></span>
 <span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(id, account_id, date, amount, payments) <span class="sc">%&gt;%</span></span>
 <span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(</span>
 <span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">loan_term =</span> <span class="fu">first</span>(loan_term),</span>
@@ -161,19 +161,19 @@ date  (1): date
 <span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
 <span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a><span class="co"># 将拆分的信息与原始数据合并，形成 tidy 版 loans 数据</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a><span class="co"># Merge the extracted information with the original data to create a tidy version of loans</span></span>
 <span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>tidy_loans <span class="ot">&lt;-</span> loans <span class="sc">%&gt;%</span> </span>
 <span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span><span class="fu">all_of</span>(loan_term_cols)) <span class="sc">%&gt;%</span></span>
 <span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(loans_long, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"id"</span>, <span class="st">"account_id"</span>, <span class="st">"date"</span>, <span class="st">"amount"</span>, <span class="st">"payments"</span>))</span>
 <span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a><span class="co"># 保存 tidy 后的 loans 数据</span></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a><span class="co"># Save the tidy loans dataset</span></span>
 <span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(tidy_loans, <span class="st">"loans_r.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="clean-district.csv" class="level2">
 <h2 class="anchored" data-anchor-id="clean-district.csv">1.2 clean district.csv</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 读取 districts.csv 数据</span></span>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Read districts.csv data</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>districts <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"data/districts.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Rows: 77 Columns: 11
@@ -185,7 +185,7 @@ dbl (6): id, population, num_cities, urban_ratio, avg_salary, entrepreneur_1000
 ℹ Use `spec()` to retrieve the full column specification for this data.
 ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 对三个数组型字段去除方括号后，使用 separate() 分解为独立的列</span></span>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove brackets from three array-like fields and split them into separate columns using separate()</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>tidy_districts <span class="ot">&lt;-</span> districts <span class="sc">%&gt;%</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">municipality_info =</span> <span class="fu">str_remove_all</span>(municipality_info, <span class="st">"</span><span class="sc">\\</span><span class="st">[|</span><span class="sc">\\</span><span class="st">]"</span>),</span>
@@ -199,14 +199,14 @@ dbl (6): id, population, num_cities, urban_ratio, avg_salary, entrepreneur_1000
 <span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">separate</span>(commited_crimes, <span class="at">into =</span> <span class="fu">c</span>(<span class="st">"crime_95"</span>, <span class="st">"crime_96"</span>),</span>
 <span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>           <span class="at">sep =</span> <span class="st">","</span>, <span class="at">convert =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="co"># 保存 tidy 后的 districts 数据</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Save the tidy districts dataset</span></span>
 <span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(tidy_districts, <span class="st">"district_r.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="build-analytical-dataset" class="level2">
 <h2 class="anchored" data-anchor-id="build-analytical-dataset">1.3 build analytical dataset</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 读取各数据集</span></span>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load datasets</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>accounts <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"data/accounts.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Rows: 4500 Columns: 4
@@ -280,7 +280,7 @@ dbl (4): id, account_id, recipient_account, amount
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>loans <span class="ot">&lt;-</span> tidy_loans  </span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>districts <span class="ot">&lt;-</span> tidy_districts</span>
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="co"># ① 账户数据与 districts（分支所在区域）合并</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Merge account data with districts (branch locations)</span></span>
 <span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>data_analytical <span class="ot">&lt;-</span> accounts <span class="sc">%&gt;%</span></span>
 <span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(districts, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"district_id"</span> <span class="ot">=</span> <span class="st">"id"</span>)) <span class="sc">%&gt;%</span></span>
 <span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(</span>
@@ -289,90 +289,92 @@ dbl (4): id, account_id, recipient_account, amount
 <span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">district_name =</span> name</span>
 <span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a><span class="co"># ② 计算每个账户关联的客户数量（来自 links.csv 表）</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Calculate the number of customers associated with each account (from links.csv)</span></span>
 <span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>num_customers <span class="ot">&lt;-</span> links <span class="sc">%&gt;%</span></span>
 <span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(account_id) <span class="sc">%&gt;%</span></span>
 <span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">num_customers =</span> <span class="fu">n</span>(), <span class="at">.groups =</span> <span class="st">"drop"</span>)</span>
 <span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>data_analytical <span class="ot">&lt;-</span> data_analytical <span class="sc">%&gt;%</span></span>
 <span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(num_customers, <span class="at">by =</span> <span class="st">"account_id"</span>)</span>
 <span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a><span class="co"># ③ 计算每个账户对应的信用卡数量：先将 links 与 cards 关联，再按 account_id 分组计数</span></span>
-<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>cards_join <span class="ot">&lt;-</span> links <span class="sc">%&gt;%</span></span>
-<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">inner_join</span>(cards, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"id"</span> <span class="ot">=</span> <span class="st">"link_id"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(account_id) <span class="sc">%&gt;%</span></span>
-<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">credit_cards =</span> <span class="fu">n</span>(), <span class="at">.groups =</span> <span class="st">"drop"</span>)</span>
-<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>data_analytical <span class="ot">&lt;-</span> data_analytical <span class="sc">%&gt;%</span></span>
-<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(cards_join, <span class="at">by =</span> <span class="st">"account_id"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">credit_cards =</span> <span class="fu">if_else</span>(<span class="fu">is.na</span>(credit_cards), <span class="dv">0</span>L, credit_cards))</span>
-<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-29"><a href="#cb21-29" aria-hidden="true" tabindex="-1"></a><span class="co"># ④ 加入贷款信息（按 account_id 关联 tidy loans 数据）</span></span>
-<span id="cb21-30"><a href="#cb21-30" aria-hidden="true" tabindex="-1"></a>data_analytical <span class="ot">&lt;-</span> data_analytical <span class="sc">%&gt;%</span></span>
-<span id="cb21-31"><a href="#cb21-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(loans <span class="sc">%&gt;%</span> <span class="fu">select</span>(account_id, amount, payments, loan_term, loan_status, loan_default),</span>
-<span id="cb21-32"><a href="#cb21-32" aria-hidden="true" tabindex="-1"></a>            <span class="at">by =</span> <span class="st">"account_id"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb21-33"><a href="#cb21-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(</span>
-<span id="cb21-34"><a href="#cb21-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">loan_amount =</span> amount,</span>
-<span id="cb21-35"><a href="#cb21-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">loan_payments =</span> payments</span>
-<span id="cb21-36"><a href="#cb21-36" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb21-37"><a href="#cb21-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb21-38"><a href="#cb21-38" aria-hidden="true" tabindex="-1"></a>    <span class="at">loan =</span> <span class="sc">!</span><span class="fu">is.na</span>(loan_amount)</span>
-<span id="cb21-39"><a href="#cb21-39" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb21-40"><a href="#cb21-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-41"><a href="#cb21-41" aria-hidden="true" tabindex="-1"></a><span class="co"># ⑤ 根据 transactions 处理提现和余额统计</span></span>
-<span id="cb21-42"><a href="#cb21-42" aria-hidden="true" tabindex="-1"></a><span class="co"># 计算每个账户的最大/最小提现金额（假设提现为 debit 类型交易）</span></span>
-<span id="cb21-43"><a href="#cb21-43" aria-hidden="true" tabindex="-1"></a>withdrawals <span class="ot">&lt;-</span> transactions <span class="sc">%&gt;%</span></span>
-<span id="cb21-44"><a href="#cb21-44" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(type <span class="sc">==</span> <span class="st">"debit"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb21-45"><a href="#cb21-45" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(account_id) <span class="sc">%&gt;%</span></span>
-<span id="cb21-46"><a href="#cb21-46" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(</span>
-<span id="cb21-47"><a href="#cb21-47" aria-hidden="true" tabindex="-1"></a>    <span class="at">max_withdrawal =</span> <span class="fu">max</span>(amount, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb21-48"><a href="#cb21-48" aria-hidden="true" tabindex="-1"></a>    <span class="at">min_withdrawal =</span> <span class="fu">min</span>(amount, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb21-49"><a href="#cb21-49" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
-<span id="cb21-50"><a href="#cb21-50" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb21-51"><a href="#cb21-51" aria-hidden="true" tabindex="-1"></a>data_analytical <span class="ot">&lt;-</span> data_analytical <span class="sc">%&gt;%</span></span>
-<span id="cb21-52"><a href="#cb21-52" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(withdrawals, <span class="at">by =</span> <span class="st">"account_id"</span>)</span>
-<span id="cb21-53"><a href="#cb21-53" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-54"><a href="#cb21-54" aria-hidden="true" tabindex="-1"></a><span class="co"># 计算每个账户的信用卡支付次数（假定 method 为 "credit card" 且 type 为 debit）</span></span>
-<span id="cb21-55"><a href="#cb21-55" aria-hidden="true" tabindex="-1"></a>cc_payments <span class="ot">&lt;-</span> transactions <span class="sc">%&gt;%</span></span>
-<span id="cb21-56"><a href="#cb21-56" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(method <span class="sc">==</span> <span class="st">"credit card"</span>, type <span class="sc">==</span> <span class="st">"debit"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb21-57"><a href="#cb21-57" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(account_id) <span class="sc">%&gt;%</span></span>
-<span id="cb21-58"><a href="#cb21-58" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">cc_payments =</span> <span class="fu">n</span>(), <span class="at">.groups =</span> <span class="st">"drop"</span>)</span>
-<span id="cb21-59"><a href="#cb21-59" aria-hidden="true" tabindex="-1"></a>data_analytical <span class="ot">&lt;-</span> data_analytical <span class="sc">%&gt;%</span></span>
-<span id="cb21-60"><a href="#cb21-60" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(cc_payments, <span class="at">by =</span> <span class="st">"account_id"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb21-61"><a href="#cb21-61" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">cc_payments =</span> <span class="fu">if_else</span>(<span class="fu">is.na</span>(cc_payments), <span class="dv">0</span>L, cc_payments))</span>
-<span id="cb21-62"><a href="#cb21-62" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-63"><a href="#cb21-63" aria-hidden="true" tabindex="-1"></a><span class="co"># 计算每个账户的最大和最小余额</span></span>
-<span id="cb21-64"><a href="#cb21-64" aria-hidden="true" tabindex="-1"></a>balance_stats <span class="ot">&lt;-</span> transactions <span class="sc">%&gt;%</span></span>
-<span id="cb21-65"><a href="#cb21-65" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(account_id) <span class="sc">%&gt;%</span></span>
-<span id="cb21-66"><a href="#cb21-66" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(</span>
-<span id="cb21-67"><a href="#cb21-67" aria-hidden="true" tabindex="-1"></a>    <span class="at">max_balance =</span> <span class="fu">max</span>(balance, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb21-68"><a href="#cb21-68" aria-hidden="true" tabindex="-1"></a>    <span class="at">min_balance =</span> <span class="fu">min</span>(balance, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb21-69"><a href="#cb21-69" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
-<span id="cb21-70"><a href="#cb21-70" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb21-71"><a href="#cb21-71" aria-hidden="true" tabindex="-1"></a>data_analytical <span class="ot">&lt;-</span> data_analytical <span class="sc">%&gt;%</span></span>
-<span id="cb21-72"><a href="#cb21-72" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(balance_stats, <span class="at">by =</span> <span class="st">"account_id"</span>)</span>
-<span id="cb21-73"><a href="#cb21-73" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-74"><a href="#cb21-74" aria-hidden="true" tabindex="-1"></a><span class="co"># ⑥ 按要求选择所需字段并保存最终分析数据集</span></span>
-<span id="cb21-75"><a href="#cb21-75" aria-hidden="true" tabindex="-1"></a>analytical_dataset <span class="ot">&lt;-</span> data_analytical <span class="sc">%&gt;%</span></span>
-<span id="cb21-76"><a href="#cb21-76" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
-<span id="cb21-77"><a href="#cb21-77" aria-hidden="true" tabindex="-1"></a>    account_id,</span>
-<span id="cb21-78"><a href="#cb21-78" aria-hidden="true" tabindex="-1"></a>    district_name,</span>
-<span id="cb21-79"><a href="#cb21-79" aria-hidden="true" tabindex="-1"></a>    open_date,</span>
-<span id="cb21-80"><a href="#cb21-80" aria-hidden="true" tabindex="-1"></a>    statement_frequency,</span>
-<span id="cb21-81"><a href="#cb21-81" aria-hidden="true" tabindex="-1"></a>    num_customers,</span>
-<span id="cb21-82"><a href="#cb21-82" aria-hidden="true" tabindex="-1"></a>    credit_cards,</span>
-<span id="cb21-83"><a href="#cb21-83" aria-hidden="true" tabindex="-1"></a>    loan,</span>
-<span id="cb21-84"><a href="#cb21-84" aria-hidden="true" tabindex="-1"></a>    loan_amount,</span>
-<span id="cb21-85"><a href="#cb21-85" aria-hidden="true" tabindex="-1"></a>    loan_payments,</span>
-<span id="cb21-86"><a href="#cb21-86" aria-hidden="true" tabindex="-1"></a>    loan_term,</span>
-<span id="cb21-87"><a href="#cb21-87" aria-hidden="true" tabindex="-1"></a>    loan_status,</span>
-<span id="cb21-88"><a href="#cb21-88" aria-hidden="true" tabindex="-1"></a>    loan_default,</span>
-<span id="cb21-89"><a href="#cb21-89" aria-hidden="true" tabindex="-1"></a>    max_withdrawal,</span>
-<span id="cb21-90"><a href="#cb21-90" aria-hidden="true" tabindex="-1"></a>    min_withdrawal,</span>
-<span id="cb21-91"><a href="#cb21-91" aria-hidden="true" tabindex="-1"></a>    cc_payments,</span>
-<span id="cb21-92"><a href="#cb21-92" aria-hidden="true" tabindex="-1"></a>    max_balance,</span>
-<span id="cb21-93"><a href="#cb21-93" aria-hidden="true" tabindex="-1"></a>    min_balance</span>
-<span id="cb21-94"><a href="#cb21-94" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb21-95"><a href="#cb21-95" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-96"><a href="#cb21-96" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(analytical_dataset, <span class="st">"analytical_r.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Calculate the number of credit cards associated with each account: </span></span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Join links with cards, then count by account_id</span></span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>cards_join <span class="ot">&lt;-</span> links <span class="sc">%&gt;%</span></span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">inner_join</span>(cards, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"id"</span> <span class="ot">=</span> <span class="st">"link_id"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(account_id) <span class="sc">%&gt;%</span></span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">credit_cards =</span> <span class="fu">n</span>(), <span class="at">.groups =</span> <span class="st">"drop"</span>)</span>
+<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a>data_analytical <span class="ot">&lt;-</span> data_analytical <span class="sc">%&gt;%</span></span>
+<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(cards_join, <span class="at">by =</span> <span class="st">"account_id"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">credit_cards =</span> <span class="fu">if_else</span>(<span class="fu">is.na</span>(credit_cards), <span class="dv">0</span>L, credit_cards))</span>
+<span id="cb21-29"><a href="#cb21-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-30"><a href="#cb21-30" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Add loan information (join with tidy loans data by account_id)</span></span>
+<span id="cb21-31"><a href="#cb21-31" aria-hidden="true" tabindex="-1"></a>data_analytical <span class="ot">&lt;-</span> data_analytical <span class="sc">%&gt;%</span></span>
+<span id="cb21-32"><a href="#cb21-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(loans <span class="sc">%&gt;%</span> <span class="fu">select</span>(account_id, amount, payments, loan_term, loan_status, loan_default),</span>
+<span id="cb21-33"><a href="#cb21-33" aria-hidden="true" tabindex="-1"></a>            <span class="at">by =</span> <span class="st">"account_id"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb21-34"><a href="#cb21-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(</span>
+<span id="cb21-35"><a href="#cb21-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">loan_amount =</span> amount,</span>
+<span id="cb21-36"><a href="#cb21-36" aria-hidden="true" tabindex="-1"></a>    <span class="at">loan_payments =</span> payments</span>
+<span id="cb21-37"><a href="#cb21-37" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb21-38"><a href="#cb21-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb21-39"><a href="#cb21-39" aria-hidden="true" tabindex="-1"></a>    <span class="at">loan =</span> <span class="sc">!</span><span class="fu">is.na</span>(loan_amount)</span>
+<span id="cb21-40"><a href="#cb21-40" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb21-41"><a href="#cb21-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-42"><a href="#cb21-42" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Process withdrawals and balance statistics using transactions data</span></span>
+<span id="cb21-43"><a href="#cb21-43" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate max/min withdrawal amounts (assuming withdrawals are debit transactions)</span></span>
+<span id="cb21-44"><a href="#cb21-44" aria-hidden="true" tabindex="-1"></a>withdrawals <span class="ot">&lt;-</span> transactions <span class="sc">%&gt;%</span></span>
+<span id="cb21-45"><a href="#cb21-45" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(type <span class="sc">==</span> <span class="st">"debit"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb21-46"><a href="#cb21-46" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(account_id) <span class="sc">%&gt;%</span></span>
+<span id="cb21-47"><a href="#cb21-47" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(</span>
+<span id="cb21-48"><a href="#cb21-48" aria-hidden="true" tabindex="-1"></a>    <span class="at">max_withdrawal =</span> <span class="fu">max</span>(amount, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb21-49"><a href="#cb21-49" aria-hidden="true" tabindex="-1"></a>    <span class="at">min_withdrawal =</span> <span class="fu">min</span>(amount, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb21-50"><a href="#cb21-50" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb21-51"><a href="#cb21-51" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb21-52"><a href="#cb21-52" aria-hidden="true" tabindex="-1"></a>data_analytical <span class="ot">&lt;-</span> data_analytical <span class="sc">%&gt;%</span></span>
+<span id="cb21-53"><a href="#cb21-53" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(withdrawals, <span class="at">by =</span> <span class="st">"account_id"</span>)</span>
+<span id="cb21-54"><a href="#cb21-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-55"><a href="#cb21-55" aria-hidden="true" tabindex="-1"></a><span class="co"># Count credit card payments (assuming method is "credit card" and type is debit)</span></span>
+<span id="cb21-56"><a href="#cb21-56" aria-hidden="true" tabindex="-1"></a>cc_payments <span class="ot">&lt;-</span> transactions <span class="sc">%&gt;%</span></span>
+<span id="cb21-57"><a href="#cb21-57" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(method <span class="sc">==</span> <span class="st">"credit card"</span>, type <span class="sc">==</span> <span class="st">"debit"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb21-58"><a href="#cb21-58" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(account_id) <span class="sc">%&gt;%</span></span>
+<span id="cb21-59"><a href="#cb21-59" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">cc_payments =</span> <span class="fu">n</span>(), <span class="at">.groups =</span> <span class="st">"drop"</span>)</span>
+<span id="cb21-60"><a href="#cb21-60" aria-hidden="true" tabindex="-1"></a>data_analytical <span class="ot">&lt;-</span> data_analytical <span class="sc">%&gt;%</span></span>
+<span id="cb21-61"><a href="#cb21-61" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(cc_payments, <span class="at">by =</span> <span class="st">"account_id"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb21-62"><a href="#cb21-62" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">cc_payments =</span> <span class="fu">if_else</span>(<span class="fu">is.na</span>(cc_payments), <span class="dv">0</span>L, cc_payments))</span>
+<span id="cb21-63"><a href="#cb21-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-64"><a href="#cb21-64" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute max and min balance for each account</span></span>
+<span id="cb21-65"><a href="#cb21-65" aria-hidden="true" tabindex="-1"></a>balance_stats <span class="ot">&lt;-</span> transactions <span class="sc">%&gt;%</span></span>
+<span id="cb21-66"><a href="#cb21-66" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(account_id) <span class="sc">%&gt;%</span></span>
+<span id="cb21-67"><a href="#cb21-67" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(</span>
+<span id="cb21-68"><a href="#cb21-68" aria-hidden="true" tabindex="-1"></a>    <span class="at">max_balance =</span> <span class="fu">max</span>(balance, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb21-69"><a href="#cb21-69" aria-hidden="true" tabindex="-1"></a>    <span class="at">min_balance =</span> <span class="fu">min</span>(balance, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb21-70"><a href="#cb21-70" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb21-71"><a href="#cb21-71" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb21-72"><a href="#cb21-72" aria-hidden="true" tabindex="-1"></a>data_analytical <span class="ot">&lt;-</span> data_analytical <span class="sc">%&gt;%</span></span>
+<span id="cb21-73"><a href="#cb21-73" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(balance_stats, <span class="at">by =</span> <span class="st">"account_id"</span>)</span>
+<span id="cb21-74"><a href="#cb21-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-75"><a href="#cb21-75" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. Select required fields and save the final analytical dataset</span></span>
+<span id="cb21-76"><a href="#cb21-76" aria-hidden="true" tabindex="-1"></a>analytical_dataset <span class="ot">&lt;-</span> data_analytical <span class="sc">%&gt;%</span></span>
+<span id="cb21-77"><a href="#cb21-77" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
+<span id="cb21-78"><a href="#cb21-78" aria-hidden="true" tabindex="-1"></a>    account_id,</span>
+<span id="cb21-79"><a href="#cb21-79" aria-hidden="true" tabindex="-1"></a>    district_name,</span>
+<span id="cb21-80"><a href="#cb21-80" aria-hidden="true" tabindex="-1"></a>    open_date,</span>
+<span id="cb21-81"><a href="#cb21-81" aria-hidden="true" tabindex="-1"></a>    statement_frequency,</span>
+<span id="cb21-82"><a href="#cb21-82" aria-hidden="true" tabindex="-1"></a>    num_customers,</span>
+<span id="cb21-83"><a href="#cb21-83" aria-hidden="true" tabindex="-1"></a>    credit_cards,</span>
+<span id="cb21-84"><a href="#cb21-84" aria-hidden="true" tabindex="-1"></a>    loan,</span>
+<span id="cb21-85"><a href="#cb21-85" aria-hidden="true" tabindex="-1"></a>    loan_amount,</span>
+<span id="cb21-86"><a href="#cb21-86" aria-hidden="true" tabindex="-1"></a>    loan_payments,</span>
+<span id="cb21-87"><a href="#cb21-87" aria-hidden="true" tabindex="-1"></a>    loan_term,</span>
+<span id="cb21-88"><a href="#cb21-88" aria-hidden="true" tabindex="-1"></a>    loan_status,</span>
+<span id="cb21-89"><a href="#cb21-89" aria-hidden="true" tabindex="-1"></a>    loan_default,</span>
+<span id="cb21-90"><a href="#cb21-90" aria-hidden="true" tabindex="-1"></a>    max_withdrawal,</span>
+<span id="cb21-91"><a href="#cb21-91" aria-hidden="true" tabindex="-1"></a>    min_withdrawal,</span>
+<span id="cb21-92"><a href="#cb21-92" aria-hidden="true" tabindex="-1"></a>    cc_payments,</span>
+<span id="cb21-93"><a href="#cb21-93" aria-hidden="true" tabindex="-1"></a>    max_balance,</span>
+<span id="cb21-94"><a href="#cb21-94" aria-hidden="true" tabindex="-1"></a>    min_balance</span>
+<span id="cb21-95"><a href="#cb21-95" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb21-96"><a href="#cb21-96" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-97"><a href="#cb21-97" aria-hidden="true" tabindex="-1"></a><span class="co"># Save the analytical dataset</span></span>
+<span id="cb21-98"><a href="#cb21-98" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(analytical_dataset, <span class="st">"analytical_r.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="section" class="level2">
@@ -383,21 +385,154 @@ dbl (4): id, account_id, recipient_account, amount
 <h1>Part 2: EDA</h1>
 <section id="analytical-question" class="level2">
 <h2 class="anchored" data-anchor-id="analytical-question">2.1 analytical question</h2>
-<p>this is an analytical question</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="sc">+</span> <span class="dv">1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 2</code></pre>
-</div>
-</div>
+<p>The analytical question being addressed is: <strong>Do accounts with loans show a different distribution of maximum balance compared to those without loans?</strong><br>
+I believe this can be answered visually by comparing the distributions (via a boxplot) of the variable <code>max_balance</code> for accounts that have loans versus those that do not. This approach highlights central tendencies, spread, and possible outliers clearly.</p>
 </section>
 <section id="visualization" class="level2">
 <h2 class="anchored" data-anchor-id="visualization">2.2 visualization</h2>
-<p>this is an analytical question</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="sc">+</span> <span class="dv">1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 2</code></pre>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(extrafont)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Registering fonts with R</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"themes/theme-r.R"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: The `size` argument of `element_line()` is deprecated as of ggplot2 3.4.0.
+ℹ Please use the `linewidth` argument instead.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_set</span>(my_theme)</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Read the analytical dataset created in Part 1</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>analytical <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"analytical_r.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Rows: 4500 Columns: 17</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr   (3): district_name, statement_frequency, loan_status
+dbl  (11): account_id, num_customers, credit_cards, loan_amount, loan_paymen...
+lgl   (2): loan, loan_default
+date  (1): open_date
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ensure the loan field is treated as a factor for plotting</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>analytical <span class="ot">&lt;-</span> analytical <span class="sc">%&gt;%</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">loan =</span> <span class="fu">factor</span>(loan, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"FALSE"</span>, <span class="st">"TRUE"</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"No Loan"</span>, <span class="st">"Loan"</span>)))</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a boxplot comparing max_balance by loan status</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(analytical, <span class="fu">aes</span>(<span class="at">x =</span> loan, <span class="at">y =</span> max_balance, <span class="at">fill =</span> loan)) <span class="sc">+</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"No Loan"</span> <span class="ot">=</span> <span class="st">"#6699CC"</span>, <span class="st">"Loan"</span> <span class="ot">=</span> <span class="st">"#CC6666"</span>)) <span class="sc">+</span></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Loan Status"</span>,</span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Maximum Account Balance"</span>,</span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Distribution of Maximum Account Balance by Loan Status"</span>,</span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"A comparative view of account performance based on loan availability"</span>,</span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">"Figure 1: Boxplot comparing maximum account balance for accounts with and without loans."</span></span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>  ) </span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): no font could
+be found for family "Merriweather"</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): no font could
+be found for family "Merriweather"
+Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): no font could
+be found for family "Merriweather"
+Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): no font could
+be found for family "Merriweather"
+Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): no font could
+be found for family "Merriweather"
+Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): no font could
+be found for family "Merriweather"
+Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): no font could
+be found for family "Merriweather"
+Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): no font could
+be found for family "Merriweather"
+Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): no font could
+be found for family "Merriweather"
+Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): no font could
+be found for family "Merriweather"
+Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): no font could
+be found for family "Merriweather"
+Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): no font could
+be found for family "Merriweather"
+Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): no font could
+be found for family "Merriweather"
+Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): no font could
+be found for family "Merriweather"
+Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): no font could
+be found for family "Merriweather"
+Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): no font could
+be found for family "Merriweather"
+Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): no font could
+be found for family "Merriweather"
+Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): no font could
+be found for family "Merriweather"
+Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): no font could
+be found for family "Merriweather"
+Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): no font could
+be found for family "Merriweather"
+Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): no font could
+be found for family "Merriweather"
+Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): no font could
+be found for family "Merriweather"
+Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): no font could
+be found for family "Merriweather"
+Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): no font could
+be found for family "Merriweather"
+Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): no font could
+be found for family "Merriweather"
+Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): no font could
+be found for family "Merriweather"
+Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): no font could
+be found for family "Merriweather"
+Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): no font could
+be found for family "Merriweather"</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : no
+font could be found for family "Merriweather"
+Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : no
+font could be found for family "Merriweather"
+Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : no
+font could be found for family "Merriweather"
+Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : no
+font could be found for family "Merriweather"
+Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : no
+font could be found for family "Merriweather"
+Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : no
+font could be found for family "Merriweather"</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, : no
+font could be found for family "Merriweather"
+Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, : no
+font could be found for family "Merriweather"
+Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, : no
+font could be found for family "Merriweather"
+Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, : no
+font could be found for family "Merriweather"
+Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, : no
+font could be found for family "Merriweather"
+Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, : no
+font could be found for family "Merriweather"
+Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, : no
+font could be found for family "Merriweather"
+Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, : no
+font could be found for family "Merriweather"</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="eda-r_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
 </div>
 </div>
 </section>
