@@ -1,0 +1,101 @@
+---
+title: "Bank Data Analysis-py"
+format: html
+editor: visual
+---
+
+# Part 1: Data Wrangling
+
+## 1.1 clean loans.csv
+
+```{python}
+import pandas as pd
+import numpy as np
+import re
+from pyhere import here
+
+# 读取 loans.csv 数据
+loans = pd.read_csv(here("data", "loans.csv"))
+
+# 找出所有形如 "24_A", "12_B" 的列名
+loan_term_cols = [col for col in loans.columns if re.match(r"^\d+_[ABCD]$", col)]
+
+# 将这些列 melt 成长格式
+loans_melt = loans.melt(id_vars=["id", "account_id", "date", "amount", "payments"],
+                        value_vars=loan_term_cols,
+                        var_name="term_status",
+                        value_name="flag")
+
+# 仅保留 flag 不为 "-" 的记录（假设 “X” 表示有效信息）
+loans_melt = loans_melt[loans_melt["flag"] != "-"]
+
+# 提取贷款期限和状态代码
+loans_melt["loan_term"] = loans_melt["term_status"].str.extract(r"^(\d+)_")[0].astype(int)
+loans_melt["loan_detail"] = loans_melt["term_status"].str.extract(r"_([ABCD])")[0]
+
+# 根据贷款状态代码确定贷款状态与违约情况
+def get_status(detail):
+    if detail in ["A", "B"]:
+        return "expired"
+    elif detail in ["C", "D"]:
+        return "current"
+    return np.nan
+
+def get_default(detail):
+    if detail in ["B", "D"]:
+        return True
+    elif detail in ["A", "C"]:
+        return False
+    return np.nan
+
+loans_melt["loan_status"] = loans_melt["loan_detail"].apply(get_status)
+loans_melt["loan_default"] = loans_melt["loan_detail"].apply(get_default)
+
+# 对于每个贷款，我们只保留第一条有效记录
+loans_agg = loans_melt.groupby(["id", "account_id", "date", "amount", "payments"]).agg({
+    "loan_term": "first",
+    "loan_status": "first",
+    "loan_default": "first"
+}).reset_index()
+
+# 将整理好的贷款信息与原始数据合并，得到 tidy 版 loans 数据
+loans_tidy = loans.drop(columns=loan_term_cols).merge(loans_agg, on=["id", "account_id", "date", "amount", "payments"], how="left")
+
+# 保存 tidy 数据到 CSV 文件
+loans_tidy.to_csv(here("loans_py.csv"), index=False)
+```
+
+## 1.2 clean district.csv
+
+```{python}
+#| echo: false
+2 * 2
+```
+
+## 1.3 build analytical dataset
+
+```{python}
+1 + 1
+```
+
+## 
+
+# Part 2: EDA
+
+## 2.1 analytical question
+
+this is an analytical question
+
+```{python}
+1 + 1
+```
+
+## 2.2 visualization
+
+this is an analytical question
+
+```{python}
+1 + 1
+```
+
+## 
