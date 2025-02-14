@@ -12,31 +12,31 @@ editor: visual
 library(tidyverse)
 library(lubridate)
 
-# 读取 loans.csv 数据
+# Read loans.csv data
 loans <- read_csv("data/loans.csv")
 
-# 筛选出表示贷款期限与状态的列（例如："24_A", "12_B"等）
+# Select columns representing loan terms and statuses (e.g., "24_A", "12_B", etc.)
 loan_term_cols <- loans %>% 
   select(matches("^[0-9]+_[ABCD]$")) %>% 
   colnames()
 
-# 将贷款期限字段 pivot 成长格式
+# Pivot loan term columns into a long format
 loans_long <- loans %>% 
   pivot_longer(
     cols = all_of(loan_term_cols),
     names_to = "term_status",
     values_to = "flag"
   ) %>% 
-  # 仅保留标记为“X”的记录，假设 “X” 表示该贷款期限及状态适用，其余用 "-" 表示无效
+  # Keep only records marked with "X", while "-" represents an invalid entry
   filter(flag != "-") 
 
-# 从 term_status 中提取贷款期限和状态代码
+# Extract loan term and status code from term_status
 loans_long <- loans_long %>%
   mutate(
     loan_term = as.integer(str_extract(term_status, "^[0-9]+")),
     loan_detail = str_extract(term_status, "[A-Z]")
   ) %>%
-  # 为了每个贷款记录只保留第一条有效信息，按贷款记录分组
+  # Retain only the first valid entry for each loan record, grouping by loan attributes
   group_by(id, account_id, date, amount, payments) %>%
   summarize(
     loan_term = first(loan_term),
@@ -47,22 +47,22 @@ loans_long <- loans_long %>%
     .groups = "drop"
   )
 
-# 将拆分的信息与原始数据合并，形成 tidy 版 loans 数据
+# Merge the extracted information with the original data to create a tidy version of loans
 tidy_loans <- loans %>% 
   select(-all_of(loan_term_cols)) %>%
   left_join(loans_long, by = c("id", "account_id", "date", "amount", "payments"))
 
-# 保存 tidy 后的 loans 数据
+# Save the tidy loans dataset
 write_csv(tidy_loans, "loans_r.csv")
 ```
 
 ## 1.2 clean district.csv
 
 ```{r}
-# 读取 districts.csv 数据
+# Read districts.csv data
 districts <- read_csv("data/districts.csv")
 
-# 对三个数组型字段去除方括号后，使用 separate() 分解为独立的列
+# Remove brackets from three array-like fields and split them into separate columns using separate()
 tidy_districts <- districts %>%
   mutate(
     municipality_info = str_remove_all(municipality_info, "\\[|\\]"),
@@ -76,14 +76,14 @@ tidy_districts <- districts %>%
   separate(commited_crimes, into = c("crime_95", "crime_96"),
            sep = ",", convert = TRUE)
 
-# 保存 tidy 后的 districts 数据
+# Save the tidy districts dataset
 write_csv(tidy_districts, "district_r.csv")
 ```
 
 ## 1.3 build analytical dataset
 
 ```{r}
-# 读取各数据集
+# Load datasets
 accounts <- read_csv("data/accounts.csv")
 clients <- read_csv("data/clients.csv")
 links <- read_csv("data/links.csv")
@@ -93,7 +93,7 @@ payment_orders <- read_csv("data/payment_orders.csv")
 loans <- tidy_loans  
 districts <- tidy_districts
 
-# ① 账户数据与 districts（分支所在区域）合并
+# 1. Merge account data with districts (branch locations)
 data_analytical <- accounts %>%
   left_join(districts, by = c("district_id" = "id")) %>%
   rename(
@@ -102,14 +102,15 @@ data_analytical <- accounts %>%
     district_name = name
   )
 
-# ② 计算每个账户关联的客户数量（来自 links.csv 表）
+# 2. Calculate the number of customers associated with each account (from links.csv)
 num_customers <- links %>%
   group_by(account_id) %>%
   summarize(num_customers = n(), .groups = "drop")
 data_analytical <- data_analytical %>%
   left_join(num_customers, by = "account_id")
 
-# ③ 计算每个账户对应的信用卡数量：先将 links 与 cards 关联，再按 account_id 分组计数
+# 3. Calculate the number of credit cards associated with each account: 
+# Join links with cards, then count by account_id
 cards_join <- links %>%
   inner_join(cards, by = c("id" = "link_id")) %>%
   group_by(account_id) %>%
@@ -118,7 +119,7 @@ data_analytical <- data_analytical %>%
   left_join(cards_join, by = "account_id") %>%
   mutate(credit_cards = if_else(is.na(credit_cards), 0L, credit_cards))
 
-# ④ 加入贷款信息（按 account_id 关联 tidy loans 数据）
+# 4. Add loan information (join with tidy loans data by account_id)
 data_analytical <- data_analytical %>%
   left_join(loans %>% select(account_id, amount, payments, loan_term, loan_status, loan_default),
             by = "account_id") %>%
@@ -130,8 +131,8 @@ data_analytical <- data_analytical %>%
     loan = !is.na(loan_amount)
   )
 
-# ⑤ 根据 transactions 处理提现和余额统计
-# 计算每个账户的最大/最小提现金额（假设提现为 debit 类型交易）
+# 5. Process withdrawals and balance statistics using transactions data
+# Calculate max/min withdrawal amounts (assuming withdrawals are debit transactions)
 withdrawals <- transactions %>%
   filter(type == "debit") %>%
   group_by(account_id) %>%
@@ -143,7 +144,7 @@ withdrawals <- transactions %>%
 data_analytical <- data_analytical %>%
   left_join(withdrawals, by = "account_id")
 
-# 计算每个账户的信用卡支付次数（假定 method 为 "credit card" 且 type 为 debit）
+# Count credit card payments (assuming method is "credit card" and type is debit)
 cc_payments <- transactions %>%
   filter(method == "credit card", type == "debit") %>%
   group_by(account_id) %>%
@@ -152,7 +153,7 @@ data_analytical <- data_analytical %>%
   left_join(cc_payments, by = "account_id") %>%
   mutate(cc_payments = if_else(is.na(cc_payments), 0L, cc_payments))
 
-# 计算每个账户的最大和最小余额
+# Compute max and min balance for each account
 balance_stats <- transactions %>%
   group_by(account_id) %>%
   summarize(
@@ -163,7 +164,7 @@ balance_stats <- transactions %>%
 data_analytical <- data_analytical %>%
   left_join(balance_stats, by = "account_id")
 
-# ⑥ 按要求选择所需字段并保存最终分析数据集
+# 6. Select required fields and save the final analytical dataset
 analytical_dataset <- data_analytical %>%
   select(
     account_id,
@@ -185,6 +186,7 @@ analytical_dataset <- data_analytical %>%
     min_balance
   )
 
+# Save the analytical dataset
 write_csv(analytical_dataset, "analytical_r.csv")
 ```
 
@@ -194,18 +196,38 @@ write_csv(analytical_dataset, "analytical_r.csv")
 
 ## 2.1 analytical question
 
-this is an analytical question
-
-```{r}
-1 + 1
-```
+The analytical question being addressed is: **Do accounts with loans show a different distribution of maximum balance compared to those without loans?**\
+I believe this can be answered visually by comparing the distributions (via a boxplot) of the variable `max_balance` for accounts that have loans versus those that do not. This approach highlights central tendencies, spread, and possible outliers clearly.
 
 ## 2.2 visualization
 
-this is an analytical question
-
 ```{r}
-1 + 1
+
+library(extrafont)
+source("themes/theme-r.R")
+theme_set(my_theme)
+
+# Read the analytical dataset created in Part 1
+analytical <- read_csv("analytical_r.csv")
+
+# Ensure the loan field is treated as a factor for plotting
+analytical <- analytical %>%
+  mutate(loan = factor(loan, levels = c("FALSE", "TRUE"), labels = c("No Loan", "Loan")))
+
+# Create a boxplot comparing max_balance by loan status
+p <- ggplot(analytical, aes(x = loan, y = max_balance, fill = loan)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("No Loan" = "#6699CC", "Loan" = "#CC6666")) +
+  labs(
+    x = "Loan Status",
+    y = "Maximum Account Balance",
+    title = "Distribution of Maximum Account Balance by Loan Status",
+    subtitle = "A comparative view of account performance based on loan availability",
+    caption = "Figure 1: Boxplot comparing maximum account balance for accounts with and without loans."
+  ) 
+
+print(p)
+
 ```
 
 ## 
